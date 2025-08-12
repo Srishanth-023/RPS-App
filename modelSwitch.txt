@@ -1,0 +1,6 @@
+FIRST ORDER MARKOV MODEL vs SECOND ORDER MARKOV MODEL
+
+    * Currently in 2nd order Markov model
+    * For switching to 1st order Markov model
+        --> Comment in 6th line in game/routing.py
+        --> Comment in lines from 12-16 in game/asgi.py
