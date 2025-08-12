@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPS Ultra - Welcome</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1d1f27;
+            --rock-color: #ff6b6b;
+            --paper-color: #48dbfb;
+            --scissors-color: #feca57;
+            --text-color: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background icons */
+        .bg-icons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .bg-icons .icon {
+            position: absolute;
+            display: block;
+            list-style: none;
+            width: 20px;
+            height: 20px;
+            animation: float 25s linear infinite;
+            bottom: -150px;
+            opacity: 0.2;
+        }
+
+        .bg-icons .icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .bg-icons .icon:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
+        .bg-icons .icon:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+        .bg-icons .icon:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
+        .bg-icons .icon:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+        .bg-icons .icon:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
+        .bg-icons .icon:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
+        .bg-icons .icon:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
+        .bg-icons .icon:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
+        .bg-icons .icon:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+        .bg-icons .icon:nth-child(10) { left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+                border-radius: 0;
+            }
+            100% {
+                transform: translateY(-1000px) rotate(720deg);
+                opacity: 0;
+                border-radius: 50%;
+            }
+        }
+
+        /* Main content styling */
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 20px;
+        }
+
+        h1 {
+            font-family: 'Bangers', cursive;
+            font-size: clamp(4rem, 15vw, 10rem);
+            letter-spacing: 5px;
+            line-height: 1;
+            text-align: center;
+            text-transform: uppercase;
+            -webkit-text-stroke: 2px #000;
+            animation: text-pop-up 1s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+        }
+        
+        @keyframes text-pop-up {
+            0% { transform: translateY(100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .rock-text { color: var(--rock-color); }
+        .paper-text { color: var(--paper-color); }
+        .scissors-text { color: var(--scissors-color); }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input[type="text"] {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 15px 20px;
+            width: 100%;
+            border: 3px solid #000;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 0 #000;
+        }
+
+        input[type="text"]::placeholder {
+            color: #999;
+            font-weight: 400;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #000;
+            background: #fff;
+        }
+
+        button {
+            font-family: 'Bangers', cursive;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            padding: 10px 40px;
+            border-radius: 15px;
+            border: 3px solid #000;
+            color: #000;
+            background-color: var(--scissors-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 #000;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #000;
+        }
+        
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #000;
+        }
+
+    </style>
+</head>
+<body>
+
+    <ul class="bg-icons">
+        <li class="icon">
+            <svg style="color: var(--rock-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Rock</title><path d="M9.135 2.445c-1.92.51-3.62 1.77-4.695 3.495-2.01 3.225-1.395 7.575 1.41 9.855 1.515 1.23 3.45 1.95 5.43 1.95h.21c1.995 0 3.93-1.02 5.145-2.7 2.04-2.82 1.8-6.81-1.245-9.36-1.575-1.32-3.6-2.085-5.655-2.235zm-1.41 1.77c1.32-.36 2.745-.3 4.05.195 1.755.69 3.195 2.04 3.93 3.795 2.22 5.28-.135 10.995-5.475 12.105-1.53.315-3.09.015-4.425-.855-2.925-1.92-3.825-5.88-2.01-8.94.975-1.695 2.625-2.985 4.395-3.555.51-.195 1.035-.33 1.545-.345z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--paper-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Paper</title><path d="M3.5 0C2.224 0 1.191.89 1.029 2.134l-1 10c-.16 1.23.633 2.366 1.866 2.366h.605V24h19V14.5h.5c1.38 0 2.5-1.12 2.5-2.5v-11C24.5.56 23.94 0 23.5 0H3.5zm.688 2h18.124v10H2.188l1-10z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--scissors-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Scissors</title><path d="M6.463 0a5.002 5.002 0 0 0-3.537 8.537L12 17.599l9.075-9.062A5 5 0 1 0 14.013 1.46L12 3.473 9.987 1.46A4.982 4.982 0 0 0 6.463 0zM12 6.527l-2.013-2.012a2 2 0 1 1 2.826-2.826L12 3.473l-2.013-2.012a2 2 0 1 1 2.826-2.826zM6.463 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm11.074 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--rock-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Rock</title><path d="M9.135 2.445c-1.92.51-3.62 1.77-4.695 3.495-2.01 3.225-1.395 7.575 1.41 9.855 1.515 1.23 3.45 1.95 5.43 1.95h.21c1.995 0 3.93-1.02 5.145-2.7 2.04-2.82 1.8-6.81-1.245-9.36-1.575-1.32-3.6-2.085-5.655-2.235zm-1.41 1.77c1.32-.36 2.745-.3 4.05.195 1.755.69 3.195 2.04 3.93 3.795 2.22 5.28-.135 10.995-5.475 12.105-1.53.315-3.09.015-4.425-.855-2.925-1.92-3.825-5.88-2.01-8.94.975-1.695 2.625-2.985 4.395-3.555.51-.195 1.035-.33 1.545-.345z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--paper-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Paper</title><path d="M3.5 0C2.224 0 1.191.89 1.029 2.134l-1 10c-.16 1.23.633 2.366 1.866 2.366h.605V24h19V14.5h.5c1.38 0 2.5-1.12 2.5-2.5v-11C24.5.56 23.94 0 23.5 0H3.5zm.688 2h18.124v10H2.188l1-10z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--scissors-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Scissors</title><path d="M6.463 0a5.002 5.002 0 0 0-3.537 8.537L12 17.599l9.075-9.062A5 5 0 1 0 14.013 1.46L12 3.473 9.987 1.46A4.982 4.982 0 0 0 6.463 0zM12 6.527l-2.013-2.012a2 2 0 1 1 2.826-2.826L12 3.473l-2.013-2.012a2 2 0 1 1 2.826-2.826zM6.463 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm11.074 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--rock-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Rock</title><path d="M9.135 2.445c-1.92.51-3.62 1.77-4.695 3.495-2.01 3.225-1.395 7.575 1.41 9.855 1.515 1.23 3.45 1.95 5.43 1.95h.21c1.995 0 3.93-1.02 5.145-2.7 2.04-2.82 1.8-6.81-1.245-9.36-1.575-1.32-3.6-2.085-5.655-2.235zm-1.41 1.77c1.32-.36 2.745-.3 4.05.195 1.755.69 3.195 2.04 3.93 3.795 2.22 5.28-.135 10.995-5.475 12.105-1.53.315-3.09.015-4.425-.855-2.925-1.92-3.825-5.88-2.01-8.94.975-1.695 2.625-2.985 4.395-3.555.51-.195 1.035-.33 1.545-.345z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--paper-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Paper</title><path d="M3.5 0C2.224 0 1.191.89 1.029 2.134l-1 10c-.16 1.23.633 2.366 1.866 2.366h.605V24h19V14.5h.5c1.38 0 2.5-1.12 2.5-2.5v-11C24.5.56 23.94 0 23.5 0H3.5zm.688 2h18.124v10H2.188l1-10z"/></svg>
+        </li>
+         <li class="icon">
+            <svg style="color: var(--scissors-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Scissors</title><path d="M6.463 0a5.002 5.002 0 0 0-3.537 8.537L12 17.599l9.075-9.062A5 5 0 1 0 14.013 1.46L12 3.473 9.987 1.46A4.982 4.982 0 0 0 6.463 0zM12 6.527l-2.013-2.012a2 2 0 1 1 2.826-2.826L12 3.473l-2.013-2.012a2 2 0 1 1 2.826-2.826zM6.463 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm11.074 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+        </li>
+         <li class="icon">
+            <svg style="color: var(--rock-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Rock</title><path d="M9.135 2.445c-1.92.51-3.62 1.77-4.695 3.495-2.01 3.225-1.395 7.575 1.41 9.855 1.515 1.23 3.45 1.95 5.43 1.95h.21c1.995 0 3.93-1.02 5.145-2.7 2.04-2.82 1.8-6.81-1.245-9.36-1.575-1.32-3.6-2.085-5.655-2.235zm-1.41 1.77c1.32-.36 2.745-.3 4.05.195 1.755.69 3.195 2.04 3.93 3.795 2.22 5.28-.135 10.995-5.475 12.105-1.53.315-3.09.015-4.425-.855-2.925-1.92-3.825-5.88-2.01-8.94.975-1.695 2.625-2.985 4.395-3.555.51-.195 1.035-.33 1.545-.345z"/></svg>
+        </li>
+    </ul>
+
+    <div class="content">
+        <h1>
+            <span class="rock-text">Rock</span>
+            <span class="paper-text">Paper</span>
+            <span class="scissors-text">Scissors</span>
+        </h1>
+        <form action="{% url 'start_game' %}" method="post">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Enter Your Name" required autocomplete="off">
+            <button type="submit">Challenge!</button>
+        </form>
+    </div>
+
+</body>
+</html>

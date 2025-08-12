@@ -61,6 +61,7 @@
             border-radius: 20px;
             padding: 20px;
             width: 280px;
+            text-align: center;
             border: 2px solid var(--bg-light);
             transition: all 0.3s ease;
         }
@@ -91,22 +92,22 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        #video, #overlay-canvas {
-            position: absolute; top: 0; left: 0;
+        #video {
             width: 100%; height: 100%;
             transform: scaleX(-1);
+            object-fit: cover;
         }
 
-        /* --- ### FIX: Updated this rule for proper centering ### --- */
         .controls {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 15px; /* Adds space between text and button */
+            gap: 15px;
+            min-height: 150px;
         }
         #countdown { font-size: 5rem; font-weight: 700; color: var(--primary-accent); height: 80px; line-height: 80px; }
-        #countdown.animate { animation: countdown-pulse 1s ease forwards; }
+        #countdown.animate { animation: countdown-pulse 1s ease-in-out; }
 
         #start-button, #play-again-button {
             font-size: 1.5rem; padding: 15px 50px; cursor: pointer;
@@ -121,14 +122,11 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7);
             backdrop-filter: blur(5px);
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.4s ease, visibility 0.4s;
+            display: none;
+            justify-content: center; align-items: center;
         }
         .game-overlay.visible {
-            opacity: 1;
-            visibility: visible;
+            display: flex;
         }
         .result-card {
             background: var(--bg-medium);
@@ -137,15 +135,8 @@
             text-align: center;
             border: 3px solid;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            transform: translateY(20px);
-            opacity: 0;
-            transition: all 0.4s ease 0.2s;
         }
-        .game-overlay.visible .result-card {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        .result-card h1 { font-size: 3.5rem; font-weight: 700; }
+        .result-card h1 { font-size: 3rem; font-weight: 700; }
         .result-card.win h1 { color: var(--secondary-accent); }
         .result-card.lose h1 { color: var(--loss-color); }
         .result-card.win { border-color: var(--secondary-accent); }
@@ -155,7 +146,7 @@
         #play-again-button { background-color: var(--secondary-accent); }
         #play-again-button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(83, 191, 157, 0.4); }
 
-        @keyframes countdown-pulse { 0% { transform: scale(0.5); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        @keyframes countdown-pulse { 0% { transform: scale(0.8); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
         
         @media (max-width: 900px) {
             .match-area { flex-direction: column; }
@@ -169,10 +160,13 @@
         <header><h1>RPS Ultra</h1></header>
         <div class="match-area">
             <div class="player-card" id="ai-card"><h2>YOLΛ AI</h2><div class="move-display" id="ai-move">?</div><p>Score: <span class="score" id="ai-score">0</span></p></div>
-            <div class="video-container"><video id="video" autoplay playsinline></video><canvas id="overlay-canvas"></canvas></div>
-            <div class="player-card" id="player-card"><h2>PLAYER O.P</h2><div class="move-display" id="player-move">?</div><p>Score: <span class="score" id="player-score">0</span></p></div>
+            <div class="video-container"><video id="video" autoplay playsinline></video></div>
+            <div class="player-card" id="player-card"><h2>{{ username }}</h2><div class="move-display" id="player-move">?</div><p>Score: <span class="score" id="player-score">0</span></p></div>
         </div>
-        <div class="controls"><div id="countdown">Press Start</div><button id="start-button">Start Game</button></div>
+        <div class="controls">
+            <div id="countdown">Press Start</div>
+            <button id="start-button">Start Game</button>
+        </div>
     </div>
     <canvas id="capture-canvas" style="display:none;"></canvas>
 
@@ -185,148 +179,147 @@
     </div>
 
     <script>
+        const username = "{{ username|escapejs }}";
+
+        // --- Element References ---
         const video = document.getElementById('video');
-        const captureCanvas = document.getElementById('capture-canvas');
-        const overlayCanvas = document.getElementById('overlay-canvas');
-        const captureCtx = captureCanvas.getContext('2d');
-        const overlayCtx = overlayCanvas.getContext('2d');
         const startButton = document.getElementById('start-button');
         const playAgainButton = document.getElementById('play-again-button');
         const gameOverScreen = document.getElementById('game-over-screen');
+        const playerScoreEl = document.getElementById('player-score');
+        const aiScoreEl = document.getElementById('ai-score');
+        const playerMoveEl = document.getElementById('player-move');
+        const aiMoveEl = document.getElementById('ai-move');
+        const countdownEl = document.getElementById('countdown');
+        const captureCanvas = document.getElementById('capture-canvas');
+        const captureCtx = captureCanvas.getContext('2d');
+
+        // --- Game State ---
         const moveEmojis = { rock: '✊', paper: '✋', scissors: '✌️' };
-        let frameSenderInterval = null;
+        let playerScore = 0;
+        let aiScore = 0;
+        let gameLoopInterval = null;
+        const winningScore = 3;
 
-        // --- ### KEY FIX: Set canvas size after video loads ### ---
-        video.addEventListener('loadedmetadata', () => {
-            const videoWidth = video.videoWidth;
-            const videoHeight = video.videoHeight;
-            
-            overlayCanvas.width = videoWidth;
-            overlayCanvas.height = videoHeight;
-            captureCanvas.width = videoWidth;
-            captureCanvas.height = videoHeight;
-        });
-
-        // --- WebSocket Setup ---
-        const gameSocket = new WebSocket(`ws://${window.location.host}/ws/game/`);
-        gameSocket.onmessage = (e) => handleServerMessage(JSON.parse(e.data));
-        gameSocket.onopen = () => startButton.style.display = 'block';
-        gameSocket.onclose = () => { document.getElementById('countdown').innerText = "Connection Lost!"; stopGame(); };
-
-        function handleServerMessage(data) {
-            switch (data.type) {
-                case 'countdown': updateCountdown(data.value); break;
-                case 'game_update': updateGameUI(data); drawHand(data.landmarks); break;
-                case 'game_over': showGameOver(data); break;
-            }
-        }
-
-        function drawHand(landmarks) {
-            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-            if (!landmarks || landmarks.length === 0) return;
-
-            overlayCtx.fillStyle = '#ff00ff';
-            landmarks.forEach(lm => {
-                const x = overlayCanvas.width - lm[0];
-                const y = lm[1];
-                overlayCtx.beginPath();
-                overlayCtx.arc(x, y, 5, 0, 2 * Math.PI);
-                overlayCtx.fill();
+        // --- Camera Setup ---
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.addEventListener('loadedmetadata', () => {
+                    captureCanvas.width = video.videoWidth;
+                    captureCanvas.height = video.videoHeight;
+                });
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: ", err);
+                countdownEl.innerText = "Error: Webcam needed!";
             });
-        }
-        
-        function sendFrame() {
-            if (gameSocket.readyState !== WebSocket.OPEN) return;
+
+        // --- Game Logic ---
+        function sendFrameToServer() {
+            if (video.readyState < 2) return;
+            
             captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
             const imageData = captureCanvas.toDataURL('image/jpeg', 0.5);
-            gameSocket.send(JSON.stringify({'type': 'frame', 'image': imageData}));
+
+            fetch("{% url 'analyze_frame' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.winner) {
+                    updateGameUI(data);
+                }
+            })
+            .catch(error => console.error('Error analyzing frame:', error));
+        }
+
+        function updateGameUI(data) {
+            playerMoveEl.innerText = moveEmojis[data.player_move] || '?';
+            aiMoveEl.innerText = moveEmojis[data.ai_move] || '?';
+
+            if (data.winner === 'player') {
+                playerScore++;
+            } else if (data.winner === 'ai') {
+                aiScore++;
+            }
+
+            playerScoreEl.innerText = playerScore;
+            aiScoreEl.innerText = aiScore;
+
+            if (playerScore >= winningScore || aiScore >= winningScore) {
+                clearInterval(gameLoopInterval);
+                showGameOver();
+            }
+        }
+        
+        function runGameRound() {
+            let count = 3;
+            countdownEl.innerText = count;
+            countdownEl.classList.add('animate');
+
+            const timer = setInterval(() => {
+                countdownEl.classList.remove('animate');
+                void countdownEl.offsetWidth;
+                countdownEl.classList.add('animate');
+                count--;
+                if (count > 0) {
+                    countdownEl.innerText = count;
+                } else {
+                    countdownEl.innerText = "SHOOT!";
+                    clearInterval(timer);
+                    sendFrameToServer();
+                }
+            }, 1000);
         }
 
         function startGame() {
             startButton.style.display = 'none';
             gameOverScreen.classList.remove('visible');
-            resetUI();
-            gameSocket.send(JSON.stringify({'type': 'start_game'}));
-            frameSenderInterval = setInterval(sendFrame, 100);
+            resetGame();
+            runGameRound();
+            gameLoopInterval = setInterval(runGameRound, 4000);
         }
 
-        function stopGame() { 
-            if (frameSenderInterval) clearInterval(frameSenderInterval);
-            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        function resetGame() {
+            playerScore = 0;
+            aiScore = 0;
+            playerScoreEl.innerText = '0';
+            aiScoreEl.innerText = '0';
+            playerMoveEl.innerText = '?';
+            aiMoveEl.innerText = '?';
+            countdownEl.innerText = '';
         }
 
-        function showGameOver(data) {
-            stopGame();
+        function showGameOver() {
             const resultCard = document.getElementById('result-card');
             const resultTitle = document.getElementById('result-title');
-            const finalScore = document.getElementById('final-score');
-            const playerScore = document.getElementById('player-score').innerText;
-            const aiScore = document.getElementById('ai-score').innerText;
+            const finalScoreEl = document.getElementById('final-score');
 
             resultCard.className = 'result-card';
-            if (data.winner === "Player") {
-                resultTitle.innerText = "VICTORY";
+            
+            if (playerScore > aiScore) {
+                resultTitle.innerText = `${username} Wins!`;
                 resultCard.classList.add('win');
             } else {
-                resultTitle.innerText = "DEFEAT";
+                resultTitle.innerText = `${username} Lost!`;
                 resultCard.classList.add('lose');
             }
-            finalScore.innerText = `Final Score: ${playerScore} - ${aiScore}`;
+
+            finalScoreEl.innerText = `Final Score: ${playerScore} - ${aiScore}`;
             gameOverScreen.classList.add('visible');
         }
 
-        function updateCountdown(value) {
-            const countdownEl = document.getElementById('countdown');
-            countdownEl.innerText = value > 0 ? value : "SHOOT!";
-            if (value === 3) {
-                 overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-            }
-            countdownEl.classList.remove('animate');
-            void countdownEl.offsetWidth;
-            countdownEl.classList.add('animate');
-        }
-
-        function updateGameUI(data) {
-            const playerMoveEl = document.getElementById('player-move');
-            const aiMoveEl = document.getElementById('ai-move');
-            const aiCard = document.getElementById('ai-card');
-            const playerCard = document.getElementById('player-card');
-
-            aiCard.classList.remove('winner');
-            playerCard.classList.remove('winner');
-            
-            if (data.error) {
-                playerMoveEl.innerText = '?';
-            } else {
-                playerMoveEl.innerText = moveEmojis[data.player_move] || '?';
-                aiMoveEl.innerText = moveEmojis[data.ai_move] || '?';
-                document.getElementById('ai-score').innerText = data.scores[0];
-                document.getElementById('player-score').innerText = data.scores[1];
-                if(data.player_move && data.ai_move) {
-                    const winner = getWinner(data.player_move, data.ai_move);
-                    if (winner === 'Player') playerCard.classList.add('winner');
-                    if (winner === 'AI') aiCard.classList.add('winner');
-                }
-            }
-        }
-
-        function getWinner(player, ai) { if(!player || !ai || player === ai) return 'Tie'; return ({rock:'scissors', paper:'rock', scissors:'paper'})[player] === ai ? 'Player' : 'AI'; }
-        
-        function resetUI() {
-            document.getElementById('player-score').innerText = '0';
-            document.getElementById('ai-score').innerText = '0';
-            document.getElementById('player-move').innerText = '?';
-            document.getElementById('ai-move').innerText = '?';
-            document.getElementById('countdown').innerText = '';
-            document.getElementById('ai-card').classList.remove('winner');
-            document.getElementById('player-card').classList.remove('winner');
-        }
-
+        // --- Event Listeners ---
         startButton.addEventListener('click', startGame);
-        playAgainButton.addEventListener('click', startGame);
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => { video.srcObject = stream; })
-            .catch(err => { console.error("Error accessing webcam: ", err); });
+        
+        // CHANGE: "Play Again" now redirects to the home page to enter a new name.
+        playAgainButton.addEventListener('click', () => {
+            window.location.href = "{% url 'home' %}";
+        });
+
     </script>
 </body>
 </html>
