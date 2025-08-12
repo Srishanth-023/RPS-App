@@ -177,7 +177,6 @@
             75% { transform: translateX(10px) rotate(5deg); }
         }
         
-        /* ### NEW STYLE FOR ROUND RESULT ### */
         #round-result {
             font-family: 'Poppins', sans-serif;
             font-size: 1.5rem;
@@ -300,7 +299,6 @@
             <div class="center-area">
                 <div class="video-container"><video id="video" autoplay playsinline></video></div>
                 <div id="countdown">Press Start</div>
-                <!-- ### STEP 1: ADDED THIS ELEMENT ### -->
                 <div id="round-result"></div>
                 <button id="start-button">Start Game</button>
             </div>
@@ -336,7 +334,6 @@
         const playerMoveEl = document.getElementById('player-move');
         const aiMoveEl = document.getElementById('ai-move');
         const countdownEl = document.getElementById('countdown');
-        // ### STEP 3.1: Get a reference to the new element ###
         const roundResultEl = document.getElementById('round-result');
         const captureCanvas = document.getElementById('capture-canvas');
         const captureCtx = captureCanvas.getContext('2d');
@@ -346,7 +343,8 @@
         let playerScore = 0;
         let aiScore = 0;
         let gameLoopInterval = null;
-        const winningScore = 3;
+        // ### CHANGE: Winning score is now 5 ###
+        const winningScore = 5; 
         const winMessages = ["FLAWLESS VICTORY!", "UNSTOPPABLE!", "MASTER STRATEGIST!", "CRUSHED IT!"];
         const loseMessages = ["A VALIANT EFFORT!", "OUTPLAYED!", "THE AI PREVAILED!", "BETTER LUCK NEXT TIME!"];
         const winIcon = `<svg class="win-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/><path d="m16.293 8.293-5.293 5.293-2.293-2.293-1.414 1.414L11 16.414l6.707-6.707z"/></svg>`;
@@ -380,7 +378,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                // ### STEP 3.4: Check for error or winner ###
                 if (data.error) {
                     roundResultEl.innerText = "No hand detected!";
                 } else if (data.winner) {
@@ -396,7 +393,6 @@
             playerMoveEl.classList.add('reveal');
             aiMoveEl.classList.add('reveal');
 
-            // ### STEP 3.3: Display round result message ###
             if (data.winner === 'player') {
                 playerScore++;
                 playerScoreEl.classList.add('updated');
@@ -425,7 +421,6 @@
         
         function runGameRound() {
             let count = 3;
-            // ### STEP 3.2: Clear the message at the start of a round ###
             roundResultEl.innerText = ''; 
             playerMoveEl.innerText = '?';
             aiMoveEl.innerText = '?';
@@ -464,7 +459,7 @@
             aiScoreEl.innerText = '0';
             playerMoveEl.innerText = '?';
             aiMoveEl.innerText = '?';
-            roundResultEl.innerText = ''; // Also clear message on full reset
+            roundResultEl.innerText = '';
         }
 
         function showGameOver() {
