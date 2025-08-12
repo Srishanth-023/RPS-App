@@ -1,1 +1,13 @@
-/venv
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+
+# Database file
+db.sqlite3
+
+# Other common files to ignore
+.env
+*.log
