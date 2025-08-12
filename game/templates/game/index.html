@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPS Ultra - Final</title>
+    <title>RPS Ultra - The Arena</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #1a1a2e;
-            --bg-medium: #16213e;
-            --bg-light: #0f3460;
-            --primary-accent: #e94560;
-            --secondary-accent: #53bf9d; /* Green for Win */
-            --loss-color: #e74c3c;      /* Red for Lose */
-            --text-color: #dcdcdc;
-            --font-main: 'Poppins', sans-serif;
+            --bg-color: #1d1f27;
+            --rock-color: #ff6b6b;
+            --paper-color: #48dbfb;
+            --scissors-color: #feca57;
+            --text-color: #ffffff;
+            --dark-text: #2c3e50;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: var(--font-main);
-            background-color: var(--bg-dark);
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
             justify-content: center;
@@ -31,150 +29,297 @@
             min-height: 100vh;
             padding: 20px;
             overflow: hidden;
+            position: relative;
+        }
+
+        .bg-icons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .bg-icons .icon {
+            position: absolute;
+            display: block;
+            list-style: none;
+            width: 20px;
+            height: 20px;
+            animation: float 25s linear infinite;
+            bottom: -150px;
+            opacity: 0.15;
+        }
+
+        .bg-icons .icon svg { width: 100%; height: 100%; }
+        .bg-icons .icon:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
+        .bg-icons .icon:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+        .bg-icons .icon:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
+        .bg-icons .icon:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+        .bg-icons .icon:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
+        .bg-icons .icon:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
+        .bg-icons .icon:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
+        .bg-icons .icon:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
+        .bg-icons .icon:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+        .bg-icons .icon:nth-child(10) { left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; border-radius: 0; }
+            100% { transform: translateY(-1000px) rotate(720deg); opacity: 0; border-radius: 50%; }
         }
 
         .game-container {
+            position: relative;
+            z-index: 1;
             width: 100%;
-            max-width: 1200px;
+            max-width: 1400px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 1rem;
         }
 
         header h1 {
-            font-size: 2.5rem;
-            color: var(--primary-accent);
-            text-shadow: 0 0 10px var(--primary-accent);
+            font-family: 'Bangers', cursive;
+            font-size: clamp(2rem, 8vw, 5rem);
+            letter-spacing: 3px;
+            line-height: 1;
+            text-align: center;
+            -webkit-text-stroke: 2px #000;
+            margin-bottom: 20px;
         }
+        .rock-text { color: var(--rock-color); }
+        .paper-text { color: var(--paper-color); }
+        .scissors-text { color: var(--scissors-color); }
 
         .match-area {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
             width: 100%;
-            gap: 20px;
+            gap: 2rem;
         }
 
         .player-card {
-            background: var(--bg-medium);
+            background: #fff;
+            color: var(--dark-text);
             border-radius: 20px;
             padding: 20px;
-            width: 280px;
+            width: 300px;
             text-align: center;
-            border: 2px solid var(--bg-light);
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0 #000;
             transition: all 0.3s ease;
         }
-        
-        .player-card.winner {
-            box-shadow: 0 0 25px var(--secondary-accent);
-            border-color: var(--secondary-accent);
+
+        .player-card h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .player-card h2 { font-size: 1.5rem; margin-bottom: 15px; }
         .move-display {
             width: 120px; height: 120px;
-            background: var(--bg-dark);
+            background: var(--bg-color);
             border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             margin: 15px auto;
             font-size: 4rem;
+            border: 4px solid #000;
+            transition: transform 0.2s ease;
+        }
+        .move-display.reveal { animation: slam-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes slam-in {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
         }
 
-        .score { font-size: 2rem; font-weight: 600; }
-
-        .video-container {
-            position: relative;
-            width: 480px;
-            height: 360px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        .score-container { font-size: 1.5rem; font-weight: 600; }
+        .score { font-size: 3rem; font-family: 'Bangers', cursive; letter-spacing: 2px; }
+        .score.updated { animation: score-pop 0.4s; }
+        @keyframes score-pop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.4); }
         }
 
-        #video {
-            width: 100%; height: 100%;
-            transform: scaleX(-1);
-            object-fit: cover;
-        }
-
-        .controls {
+        .center-area {
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            gap: 15px;
-            min-height: 150px;
+            gap: 20px;
         }
-        #countdown { font-size: 5rem; font-weight: 700; color: var(--primary-accent); height: 80px; line-height: 80px; }
-        #countdown.animate { animation: countdown-pulse 1s ease-in-out; }
 
-        #start-button, #play-again-button {
-            font-size: 1.5rem; padding: 15px 50px; cursor: pointer;
-            border-radius: 50px; border: none;
-            color: white; font-weight: 600;
-            transition: all 0.2s ease;
+        .video-container {
+            width: 480px; height: 360px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0 #000;
         }
-        #start-button { background-color: var(--primary-accent); }
-        #start-button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4); }
+
+        #video { width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
+
+        #countdown {
+            font-family: 'Bangers', cursive;
+            font-size: 7rem;
+            -webkit-text-stroke: 3px #000;
+            min-height: 120px;
+        }
+        #countdown.shoot { color: var(--rock-color); animation: text-shake 0.5s; }
+        @keyframes text-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
         
+        /* ### NEW STYLE FOR ROUND RESULT ### */
+        #round-result {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--scissors-color);
+            min-height: 30px; /* Prevents layout shift */
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        #start-button {
+            font-family: 'Bangers', cursive;
+            font-size: 2.5rem; letter-spacing: 2px; padding: 10px 50px;
+            border-radius: 15px; border: 3px solid #000; color: #000;
+            background-color: var(--paper-color); cursor: pointer;
+            transition: all 0.2s ease; box-shadow: 0 6px 0 #000;
+        }
+        #start-button:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #000; }
+        #start-button:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
+
         .game-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(5px);
-            display: none;
-            justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 100;
+            animation: fade-in 0.3s ease;
         }
-        .game-overlay.visible {
-            display: flex;
-        }
+        .game-overlay.visible { display: flex; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
         .result-card {
-            background: var(--bg-medium);
-            padding: 40px 60px;
-            border-radius: 20px;
-            text-align: center;
-            border: 3px solid;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #fff; color: var(--dark-text);
+            padding: 40px; border-radius: 20px; text-align: center;
+            border: 4px solid #000; box-shadow: 8px 8px 0 #000;
+            width: 90%; max-width: 600px;
+            animation: slide-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        .result-card h1 { font-size: 3rem; font-weight: 700; }
-        .result-card.win h1 { color: var(--secondary-accent); }
-        .result-card.lose h1 { color: var(--loss-color); }
-        .result-card.win { border-color: var(--secondary-accent); }
-        .result-card.lose { border-color: var(--loss-color); }
-
-        .final-score { font-size: 1.5rem; margin: 10px 0 30px 0; color: var(--text-color); }
-        #play-again-button { background-color: var(--secondary-accent); }
-        #play-again-button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(83, 191, 157, 0.4); }
-
-        @keyframes countdown-pulse { 0% { transform: scale(0.8); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
+        @keyframes slide-up { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
         
-        @media (max-width: 900px) {
+        .result-card .icon { width: 100px; height: 100px; margin: 0 auto 20px; }
+        .result-card .win-icon { color: var(--scissors-color); }
+        .result-card .lose-icon { color: var(--rock-color); }
+
+        .result-card h1 {
+            font-family: 'Bangers', cursive;
+            font-size: 3.5rem; letter-spacing: 2px;
+            -webkit-text-stroke: 2px #000;
+            margin-bottom: 10px;
+        }
+        .result-card.win h1 { color: var(--scissors-color); }
+        .result-card.lose h1 { color: var(--rock-color); }
+
+        .final-score { font-size: 1.5rem; font-weight: 600; margin-bottom: 30px; }
+        #play-again-button {
+            font-family: 'Bangers', cursive;
+            font-size: 2rem; letter-spacing: 2px; padding: 10px 40px;
+            border-radius: 15px; border: 3px solid #000; color: #000;
+            background-color: var(--paper-color); cursor: pointer;
+            transition: all 0.2s ease; box-shadow: 0 4px 0 #000;
+        }
+        #play-again-button:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #000; }
+        
+        @media (max-width: 1200px) {
             .match-area { flex-direction: column; }
-            .video-container { order: -1; margin-bottom: 20px; }
+            .center-area { order: -1; margin-bottom: 20px; }
         }
     </style>
 </head>
 <body>
 
+    <ul class="bg-icons">
+        <!-- ... icon list remains the same ... -->
+        <li class="icon">
+            <svg style="color: var(--rock-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Rock</title><path d="M9.135 2.445c-1.92.51-3.62 1.77-4.695 3.495-2.01 3.225-1.395 7.575 1.41 9.855 1.515 1.23 3.45 1.95 5.43 1.95h.21c1.995 0 3.93-1.02 5.145-2.7 2.04-2.82 1.8-6.81-1.245-9.36-1.575-1.32-3.6-2.085-5.655-2.235zm-1.41 1.77c1.32-.36 2.745-.3 4.05.195 1.755.69 3.195 2.04 3.93 3.795 2.22 5.28-.135 10.995-5.475 12.105-1.53.315-3.09.015-4.425-.855-2.925-1.92-3.825-5.88-2.01-8.94.975-1.695 2.625-2.985 4.395-3.555.51-.195 1.035-.33 1.545-.345z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--paper-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Paper</title><path d="M3.5 0C2.224 0 1.191.89 1.029 2.134l-1 10c-.16 1.23.633 2.366 1.866 2.366h.605V24h19V14.5h.5c1.38 0 2.5-1.12 2.5-2.5v-11C24.5.56 23.94 0 23.5 0H3.5zm.688 2h18.124v10H2.188l1-10z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--scissors-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Scissors</title><path d="M6.463 0a5.002 5.002 0 0 0-3.537 8.537L12 17.599l9.075-9.062A5 5 0 1 0 14.013 1.46L12 3.473 9.987 1.46A4.982 4.982 0 0 0 6.463 0zM12 6.527l-2.013-2.012a2 2 0 1 1 2.826-2.826L12 3.473l-2.013-2.012a2 2 0 1 1 2.826-2.826zM6.463 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm11.074 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--rock-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Rock</title><path d="M9.135 2.445c-1.92.51-3.62 1.77-4.695 3.495-2.01 3.225-1.395 7.575 1.41 9.855 1.515 1.23 3.45 1.95 5.43 1.95h.21c1.995 0 3.93-1.02 5.145-2.7 2.04-2.82 1.8-6.81-1.245-9.36-1.575-1.32-3.6-2.085-5.655-2.235zm-1.41 1.77c1.32-.36 2.745-.3 4.05.195 1.755.69 3.195 2.04 3.93 3.795 2.22 5.28-.135 10.995-5.475 12.105-1.53.315-3.09.015-4.425-.855-2.925-1.92-3.825-5.88-2.01-8.94.975-1.695 2.625-2.985 4.395-3.555.51-.195 1.035-.33 1.545-.345z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--paper-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Paper</title><path d="M3.5 0C2.224 0 1.191.89 1.029 2.134l-1 10c-.16 1.23.633 2.366 1.866 2.366h.605V24h19V14.5h.5c1.38 0 2.5-1.12 2.5-2.5v-11C24.5.56 23.94 0 23.5 0H3.5zm.688 2h18.124v10H2.188l1-10z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--scissors-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Scissors</title><path d="M6.463 0a5.002 5.002 0 0 0-3.537 8.537L12 17.599l9.075-9.062A5 5 0 1 0 14.013 1.46L12 3.473 9.987 1.46A4.982 4.982 0 0 0 6.463 0zM12 6.527l-2.013-2.012a2 2 0 1 1 2.826-2.826L12 3.473l-2.013-2.012a2 2 0 1 1 2.826-2.826zM6.463 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm11.074 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--rock-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Rock</title><path d="M9.135 2.445c-1.92.51-3.62 1.77-4.695 3.495-2.01 3.225-1.395 7.575 1.41 9.855 1.515 1.23 3.45 1.95 5.43 1.95h.21c1.995 0 3.93-1.02 5.145-2.7 2.04-2.82 1.8-6.81-1.245-9.36-1.575-1.32-3.6-2.085-5.655-2.235zm-1.41 1.77c1.32-.36 2.745-.3 4.05.195 1.755.69 3.195 2.04 3.93 3.795 2.22 5.28-.135 10.995-5.475 12.105-1.53.315-3.09.015-4.425-.855-2.925-1.92-3.825-5.88-2.01-8.94.975-1.695 2.625-2.985 4.395-3.555.51-.195 1.035-.33 1.545-.345z"/></svg>
+        </li>
+        <li class="icon">
+            <svg style="color: var(--paper-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Paper</title><path d="M3.5 0C2.224 0 1.191.89 1.029 2.134l-1 10c-.16 1.23.633 2.366 1.866 2.366h.605V24h19V14.5h.5c1.38 0 2.5-1.12 2.5-2.5v-11C24.5.56 23.94 0 23.5 0H3.5zm.688 2h18.124v10H2.188l1-10z"/></svg>
+        </li>
+         <li class="icon">
+            <svg style="color: var(--scissors-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Scissors</title><path d="M6.463 0a5.002 5.002 0 0 0-3.537 8.537L12 17.599l9.075-9.062A5 5 0 1 0 14.013 1.46L12 3.473 9.987 1.46A4.982 4.982 0 0 0 6.463 0zM12 6.527l-2.013-2.012a2 2 0 1 1 2.826-2.826L12 3.473l-2.013-2.012a2 2 0 1 1 2.826-2.826zM6.463 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm11.074 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+        </li>
+         <li class="icon">
+            <svg style="color: var(--rock-color)" role="img" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Rock</title><path d="M9.135 2.445c-1.92.51-3.62 1.77-4.695 3.495-2.01 3.225-1.395 7.575 1.41 9.855 1.515 1.23 3.45 1.95 5.43 1.95h.21c1.995 0 3.93-1.02 5.145-2.7 2.04-2.82 1.8-6.81-1.245-9.36-1.575-1.32-3.6-2.085-5.655-2.235zm-1.41 1.77c1.32-.36 2.745-.3 4.05.195 1.755.69 3.195 2.04 3.93 3.795 2.22 5.28-.135 10.995-5.475 12.105-1.53.315-3.09.015-4.425-.855-2.925-1.92-3.825-5.88-2.01-8.94.975-1.695 2.625-2.985 4.395-3.555.51-.195 1.035-.33 1.545-.345z"/></svg>
+        </li>
+    </ul>
+
     <div class="game-container">
-        <header><h1>RPS Ultra</h1></header>
+        <header>
+            <h1>
+                <span class="rock-text">Rock</span>
+                <span class="paper-text">Paper</span>
+                <span class="scissors-text">Scissors</span>
+            </h1>
+        </header>
         <div class="match-area">
-            <div class="player-card" id="ai-card"><h2>YOLΛ AI</h2><div class="move-display" id="ai-move">?</div><p>Score: <span class="score" id="ai-score">0</span></p></div>
-            <div class="video-container"><video id="video" autoplay playsinline></video></div>
-            <div class="player-card" id="player-card"><h2>{{ username }}</h2><div class="move-display" id="player-move">?</div><p>Score: <span class="score" id="player-score">0</span></p></div>
-        </div>
-        <div class="controls">
-            <div id="countdown">Press Start</div>
-            <button id="start-button">Start Game</button>
+            <div class="player-card" id="player-card">
+                <h2>{{ username }}</h2>
+                <div class="move-display" id="player-move">?</div>
+                <div class="score-container">Score: <span class="score" id="player-score">0</span></div>
+            </div>
+
+            <div class="center-area">
+                <div class="video-container"><video id="video" autoplay playsinline></video></div>
+                <div id="countdown">Press Start</div>
+                <!-- ### STEP 1: ADDED THIS ELEMENT ### -->
+                <div id="round-result"></div>
+                <button id="start-button">Start Game</button>
+            </div>
+
+            <div class="player-card" id="ai-card">
+                <h2>YOLΛ AI</h2>
+                <div class="move-display" id="ai-move">?</div>
+                <div class="score-container">Score: <span class="score" id="ai-score">0</span></div>
+            </div>
         </div>
     </div>
     <canvas id="capture-canvas" style="display:none;"></canvas>
 
     <div class="game-overlay" id="game-over-screen">
         <div class="result-card" id="result-card">
+            <div class="icon" id="result-icon-container"></div>
             <h1 id="result-title"></h1>
             <p class="final-score" id="final-score"></p>
-            <button id="play-again-button">Play Again</button>
+            <button id="play-again-button">Rematch!</button>
         </div>
     </div>
 
@@ -191,15 +336,21 @@
         const playerMoveEl = document.getElementById('player-move');
         const aiMoveEl = document.getElementById('ai-move');
         const countdownEl = document.getElementById('countdown');
+        // ### STEP 3.1: Get a reference to the new element ###
+        const roundResultEl = document.getElementById('round-result');
         const captureCanvas = document.getElementById('capture-canvas');
         const captureCtx = captureCanvas.getContext('2d');
 
-        // --- Game State ---
+        // --- Game State & Theming ---
         const moveEmojis = { rock: '✊', paper: '✋', scissors: '✌️' };
         let playerScore = 0;
         let aiScore = 0;
         let gameLoopInterval = null;
         const winningScore = 3;
+        const winMessages = ["FLAWLESS VICTORY!", "UNSTOPPABLE!", "MASTER STRATEGIST!", "CRUSHED IT!"];
+        const loseMessages = ["A VALIANT EFFORT!", "OUTPLAYED!", "THE AI PREVAILED!", "BETTER LUCK NEXT TIME!"];
+        const winIcon = `<svg class="win-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/><path d="m16.293 8.293-5.293 5.293-2.293-2.293-1.414 1.414L11 16.414l6.707-6.707z"/></svg>`;
+        const loseIcon = `<svg class="lose-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/><path d="m16.707 7.293-1.414-1.414L12 9.172 8.707 5.879 7.293 7.293 10.586 10.586 7.293 13.879l1.414 1.414L12 13.414l3.293 3.293 1.414-1.414L13.414 10.586z"/></svg>`;
 
         // --- Camera Setup ---
         navigator.mediaDevices.getUserMedia({ video: true })
@@ -212,7 +363,7 @@
             })
             .catch(err => {
                 console.error("Error accessing webcam: ", err);
-                countdownEl.innerText = "Error: Webcam needed!";
+                countdownEl.innerText = "Webcam Error!";
             });
 
         // --- Game Logic ---
@@ -229,7 +380,10 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.winner) {
+                // ### STEP 3.4: Check for error or winner ###
+                if (data.error) {
+                    roundResultEl.innerText = "No hand detected!";
+                } else if (data.winner) {
                     updateGameUI(data);
                 }
             })
@@ -239,36 +393,55 @@
         function updateGameUI(data) {
             playerMoveEl.innerText = moveEmojis[data.player_move] || '?';
             aiMoveEl.innerText = moveEmojis[data.ai_move] || '?';
+            playerMoveEl.classList.add('reveal');
+            aiMoveEl.classList.add('reveal');
 
+            // ### STEP 3.3: Display round result message ###
             if (data.winner === 'player') {
                 playerScore++;
+                playerScoreEl.classList.add('updated');
+                roundResultEl.innerText = `${username} wins the round!`;
             } else if (data.winner === 'ai') {
                 aiScore++;
+                aiScoreEl.classList.add('updated');
+                roundResultEl.innerText = "AI wins the round!";
+            } else if (data.winner === 'tie') {
+                roundResultEl.innerText = "It's a Draw!";
             }
 
             playerScoreEl.innerText = playerScore;
             aiScoreEl.innerText = aiScore;
+            
+            setTimeout(() => {
+                playerScoreEl.classList.remove('updated');
+                aiScoreEl.classList.remove('updated');
+            }, 400);
 
             if (playerScore >= winningScore || aiScore >= winningScore) {
                 clearInterval(gameLoopInterval);
-                showGameOver();
+                setTimeout(showGameOver, 1000);
             }
         }
         
         function runGameRound() {
             let count = 3;
+            // ### STEP 3.2: Clear the message at the start of a round ###
+            roundResultEl.innerText = ''; 
+            playerMoveEl.innerText = '?';
+            aiMoveEl.innerText = '?';
+            playerMoveEl.classList.remove('reveal');
+            aiMoveEl.classList.remove('reveal');
+
             countdownEl.innerText = count;
-            countdownEl.classList.add('animate');
+            countdownEl.className = 'countdown-pop';
 
             const timer = setInterval(() => {
-                countdownEl.classList.remove('animate');
-                void countdownEl.offsetWidth;
-                countdownEl.classList.add('animate');
                 count--;
                 if (count > 0) {
                     countdownEl.innerText = count;
                 } else {
                     countdownEl.innerText = "SHOOT!";
+                    countdownEl.classList.add('shoot');
                     clearInterval(timer);
                     sendFrameToServer();
                 }
@@ -277,6 +450,7 @@
 
         function startGame() {
             startButton.style.display = 'none';
+            countdownEl.style.display = 'block';
             gameOverScreen.classList.remove('visible');
             resetGame();
             runGameRound();
@@ -290,32 +464,33 @@
             aiScoreEl.innerText = '0';
             playerMoveEl.innerText = '?';
             aiMoveEl.innerText = '?';
-            countdownEl.innerText = '';
+            roundResultEl.innerText = ''; // Also clear message on full reset
         }
 
         function showGameOver() {
             const resultCard = document.getElementById('result-card');
             const resultTitle = document.getElementById('result-title');
             const finalScoreEl = document.getElementById('final-score');
+            const resultIconContainer = document.getElementById('result-icon-container');
 
             resultCard.className = 'result-card';
             
             if (playerScore > aiScore) {
-                resultTitle.innerText = `${username} Wins!`;
+                resultTitle.innerText = winMessages[Math.floor(Math.random() * winMessages.length)];
+                resultIconContainer.innerHTML = winIcon;
                 resultCard.classList.add('win');
             } else {
-                resultTitle.innerText = `${username} Lost!`;
+                resultTitle.innerText = loseMessages[Math.floor(Math.random() * loseMessages.length)];
+                resultIconContainer.innerHTML = loseIcon;
                 resultCard.classList.add('lose');
             }
 
-            finalScoreEl.innerText = `Final Score: ${playerScore} - ${aiScore}`;
+            finalScoreEl.innerText = `${username}'s Score: ${playerScore} - AI Score: ${aiScore}`;
             gameOverScreen.classList.add('visible');
         }
 
         // --- Event Listeners ---
         startButton.addEventListener('click', startGame);
-        
-        // CHANGE: "Play Again" now redirects to the home page to enter a new name.
         playAgainButton.addEventListener('click', () => {
             window.location.href = "{% url 'home' %}";
         });
