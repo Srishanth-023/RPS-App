@@ -8,9 +8,13 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-# --- AI LOGIC & STATE (No changes here) ---
-transition_matrix = np.ones((3, 3)) / 3
-prev_move = None
+# --- NEW: Upgraded AI Logic & State ---
+# We now track a history of moves to enable a smarter model.
+player_move_history = []
+# This matrix maps a sequence of TWO moves to the next one (9 possible pairs -> 3 outcomes)
+second_order_transition_matrix = np.ones((9, 3)) / 3
+
+# --- Constants (No changes) ---
 move_to_int = {'rock': 1, 'paper': 2, 'scissors': 3}
 int_to_move = {1: 'rock', 2: 'paper', 3: 'scissors'}
 beat_map = {1: 2, 2: 3, 3: 1}
@@ -35,19 +39,43 @@ def _decode_image_from_base64(image_data_string):
     except (IndexError, base64.binascii.Error):
         return None
 
-def update_transition(previous_move_int, current_move_int):
-    global transition_matrix
-    if previous_move_int is not None:
-        transition_matrix[previous_move_int - 1, current_move_int - 1] += 1
-    for i in range(3):
-        row_sum = np.sum(transition_matrix[i])
-        if row_sum > 0:
-            transition_matrix[i] /= row_sum
+# --- NEW: Upgraded AI Prediction and Learning Functions ---
 
-def ai_predict():
-    if prev_move is None or random.random() < 0.3:
+def get_sequence_index(move1, move2):
+    """Converts a pair of moves (e.g., rock, paper) into a single index (0-8)."""
+    return (move1 - 1) * 3 + (move2 - 1)
+
+def update_second_order_transition(history):
+    """Updates the AI's memory based on the player's last three moves."""
+    global second_order_transition_matrix
+    if len(history) < 3:
+        return # Need at least 3 moves to establish a pattern of two -> one
+
+    # The sequence is the two moves BEFORE the most recent one
+    sequence_index = get_sequence_index(history[-3], history[-2])
+    # The outcome is the player's most recent move
+    outcome_index = history[-1] - 1
+    
+    second_order_transition_matrix[sequence_index, outcome_index] += 1
+    
+    # Normalize to keep probabilities between 0 and 1
+    row_sum = np.sum(second_order_transition_matrix[sequence_index])
+    if row_sum > 0:
+        second_order_transition_matrix[sequence_index] /= row_sum
+
+def ai_predict_upgraded(history):
+    """Predicts the AI's move using the upgraded model."""
+    # If we don't have enough history, or sometimes just to be unpredictable, play randomly.
+    if len(history) < 2 or random.random() < 0.33:
         return random.randint(1, 3)
-    predicted_player_move = np.argmax(transition_matrix[prev_move - 1]) + 1
+
+    # Get the last two moves to predict the third
+    last_two_moves_index = get_sequence_index(history[-2], history[-1])
+    
+    # Predict player's next move based on their history
+    predicted_player_move = np.argmax(second_order_transition_matrix[last_two_moves_index]) + 1
+    
+    # Return the move that beats the prediction
     return beat_map[predicted_player_move]
 
 def get_winner(player_move, ai_move):
@@ -56,10 +84,10 @@ def get_winner(player_move, ai_move):
     if winning_combos.get(player_move) == ai_move: return 'player'
     return 'ai'
 
-# --- DJANGO VIEWS (Updated) ---
+# --- DJANGO VIEWS (No changes to Django logic) ---
 
 def home_view(request):
-    """Renders the username entry page. No session logic needed."""
+    """Renders the username entry page."""
     return render(request, 'game/home.html')
 
 def start_game_view(request):
@@ -67,16 +95,15 @@ def start_game_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         if username:
-            # Instead of saving to session, redirect with username in the URL
             return redirect('game_page', username=username)
     return redirect('home')
 
 def index(request, username):
     """Renders the game page, getting the username from the URL."""
-    # Reset AI state for a new game
-    global prev_move, transition_matrix
-    prev_move = None
-    transition_matrix = np.ones((3, 3)) / 3
+    # Reset AI state for each new game
+    global player_move_history, second_order_transition_matrix
+    player_move_history = []
+    second_order_transition_matrix = np.ones((9, 3)) / 3
     
     context = {
         'username': username
@@ -90,8 +117,6 @@ def analyze_frame(request):
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
     data = json.loads(request.body)
-    # We no longer need the username for any server-side logic here,
-    # but you could add it to the request body from JS if needed.
     img = _decode_image_from_base64(data.get('image', ''))
 
     if img is None:
@@ -102,12 +127,17 @@ def analyze_frame(request):
     if not player_move_str:
         return JsonResponse({'error': 'No hand detected or invalid gesture.'})
 
-    # --- Play the game ---
-    global prev_move
+    # --- Play the game using the UPGRADED AI ---
+    global player_move_history
     player_move_int = move_to_int[player_move_str]
-    ai_move_int = ai_predict()
-    update_transition(prev_move, player_move_int)
-    prev_move = player_move_int
+    
+    # The AI predicts based on the history BEFORE the current move is added
+    ai_move_int = ai_predict_upgraded(player_move_history)
+    
+    # Now add the current move to history and update the AI's brain
+    player_move_history.append(player_move_int)
+    update_second_order_transition(player_move_history)
+    
     ai_move_str = int_to_move[ai_move_int]
     winner = get_winner(player_move_str, ai_move_str)
 
