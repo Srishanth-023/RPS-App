@@ -9,42 +9,25 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 # --- NEW: Upgraded AI Logic & State ---
+# We now track a history of moves to enable a smarter model.
 player_move_history = []
+# This matrix maps a sequence of TWO moves to the next one (9 possible pairs -> 3 outcomes)
 second_order_transition_matrix = np.ones((9, 3)) / 3
 
-# --- Constants ---
+# --- Constants (No changes) ---
 move_to_int = {'rock': 1, 'paper': 2, 'scissors': 3}
 int_to_move = {1: 'rock', 2: 'paper', 3: 'scissors'}
 beat_map = {1: 2, 2: 3, 3: 1}
-# --- FINE-TUNED: Lowered confidence to be more lenient with finger detection ---
-detector = HandDetector(maxHands=1, detectionCon=0.75)
+detector = HandDetector(maxHands=1, detectionCon=0.8)
 
-# --- HELPER FUNCTIONS ---
-
+# --- HELPER FUNCTIONS (No changes here) ---
 def _get_move_from_image(img):
-    """
-    Analyzes an image to detect a hand gesture.
-    This function has been fine-tuned for more reliable scissors detection.
-    """
     hands, _ = detector.findHands(img, draw=False)
     if hands:
         fingers = detector.fingersUp(hands[0])
-        
-        # Rock: All fingers down
-        if fingers == [0, 0, 0, 0, 0]: 
-            return "rock"
-        
-        # Paper: All fingers up
-        if fingers == [1, 1, 1, 1, 1]: 
-            return "paper"
-        
-        # --- FINE-TUNED: Added a more flexible scissors detection ---
-        # This now accepts scissors with the thumb tucked in [0,1,1,0,0]
-        # OR with the thumb out [1,1,1,0,0], which is a common variation.
-        if fingers == [0, 1, 1, 0, 0] or fingers == [1, 1, 1, 0, 0]:
-            return "scissors"
-            
-    # If no valid gesture is found, return None
+        if fingers == [0, 0, 0, 0, 0]: return "rock"
+        if fingers == [1, 1, 1, 1, 1]: return "paper"
+        if fingers == [0, 1, 1, 0, 0]: return "scissors"
     return None
 
 def _decode_image_from_base64(image_data_string):
@@ -56,7 +39,7 @@ def _decode_image_from_base64(image_data_string):
     except (IndexError, base64.binascii.Error):
         return None
 
-# --- Upgraded AI Prediction and Learning Functions ---
+# --- NEW: Upgraded AI Prediction and Learning Functions ---
 
 def get_sequence_index(move1, move2):
     """Converts a pair of moves (e.g., rock, paper) into a single index (0-8)."""
@@ -66,24 +49,33 @@ def update_second_order_transition(history):
     """Updates the AI's memory based on the player's last three moves."""
     global second_order_transition_matrix
     if len(history) < 3:
-        return
+        return # Need at least 3 moves to establish a pattern of two -> one
 
+    # The sequence is the two moves BEFORE the most recent one
     sequence_index = get_sequence_index(history[-3], history[-2])
+    # The outcome is the player's most recent move
     outcome_index = history[-1] - 1
     
     second_order_transition_matrix[sequence_index, outcome_index] += 1
     
+    # Normalize to keep probabilities between 0 and 1
     row_sum = np.sum(second_order_transition_matrix[sequence_index])
     if row_sum > 0:
         second_order_transition_matrix[sequence_index] /= row_sum
 
 def ai_predict_upgraded(history):
     """Predicts the AI's move using the upgraded model."""
+    # If we don't have enough history, or sometimes just to be unpredictable, play randomly.
     if len(history) < 2 or random.random() < 0.33:
         return random.randint(1, 3)
 
+    # Get the last two moves to predict the third
     last_two_moves_index = get_sequence_index(history[-2], history[-1])
+    
+    # Predict player's next move based on their history
     predicted_player_move = np.argmax(second_order_transition_matrix[last_two_moves_index]) + 1
+    
+    # Return the move that beats the prediction
     return beat_map[predicted_player_move]
 
 def get_winner(player_move, ai_move):
@@ -92,7 +84,7 @@ def get_winner(player_move, ai_move):
     if winning_combos.get(player_move) == ai_move: return 'player'
     return 'ai'
 
-# --- DJANGO VIEWS ---
+# --- DJANGO VIEWS (No changes to Django logic) ---
 
 def home_view(request):
     """Renders the username entry page."""
@@ -108,6 +100,7 @@ def start_game_view(request):
 
 def index(request, username):
     """Renders the game page, getting the username from the URL."""
+    # Reset AI state for each new game
     global player_move_history, second_order_transition_matrix
     player_move_history = []
     second_order_transition_matrix = np.ones((9, 3)) / 3
@@ -134,11 +127,14 @@ def analyze_frame(request):
     if not player_move_str:
         return JsonResponse({'error': 'No hand detected or invalid gesture.'})
 
+    # --- Play the game using the UPGRADED AI ---
     global player_move_history
     player_move_int = move_to_int[player_move_str]
     
+    # The AI predicts based on the history BEFORE the current move is added
     ai_move_int = ai_predict_upgraded(player_move_history)
     
+    # Now add the current move to history and update the AI's brain
     player_move_history.append(player_move_int)
     update_second_order_transition(player_move_history)
     
