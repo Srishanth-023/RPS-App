@@ -21,19 +21,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# This will use the environment variable on Render, and a default for local testing.
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-default-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# The 'RENDER' environment variable is automatically set by Render.
 DEBUG = 'RENDER' not in os.environ
 
 # This will automatically use your Render URL when deployed.
 ALLOWED_HOSTS = []
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_URL')
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME.split("://")[1])
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# --- THIS IS THE FIX ---
+# This tells Django to trust POST requests from your own site.
+CSRF_TRUSTED_ORIGINS = [
+    'https://' + RENDER_EXTERNAL_HOSTNAME
+] if RENDER_EXTERNAL_HOSTNAME else []
 
 
 # Application definition
@@ -51,7 +55,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # --- Whitenoise middleware for serving static files ---
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -83,7 +86,6 @@ ASGI_APPLICATION = 'rps.asgi.application'
 
 
 # Database
-# The database will be reset on every deploy with this configuration.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -110,11 +112,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-
-# --- THIS IS THE FIX: Settings for production static files ---
-# This tells Django where to collect all static files to.
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# This makes serving static files in production more efficient.
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
