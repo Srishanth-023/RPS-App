@@ -4,3 +4,4 @@ channels
 gunicorn
 whitenoise
 cvzone
+mediapipe
