@@ -15,4 +15,6 @@ urlpatterns = [
 
     # The analysis URL remains the same (we'll send the username in the request)
     path('analyze/', views.analyze_frame, name='analyze_frame'),
+
+    path('api/annotate_only/', views.annotate_only_frame, name='annotate_only'),
 ]
