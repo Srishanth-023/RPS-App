@@ -21,17 +21,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'a-default-secret-key-for-local-dev')
+# This will use the environment variable on Render, and a default for local testing.
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-default-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# The 'RENDER' environment variable is automatically set by Render.
+DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = ['127.0.0.1', '.onrender.com']
+# This will automatically use your Render URL when deployed.
+ALLOWED_HOSTS = []
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_URL')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME.split("://")[1])
 
 
-# Application definitionALLOWED_HOSTS = ['127.0.0.1', '.onrender.com']
-
-
+# Application definition
 INSTALLED_APPS = [
     'daphne',
     'channels',
@@ -46,6 +51,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # --- Whitenoise middleware for serving static files ---
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -72,11 +79,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'rps.wsgi.application'
+ASGI_APPLICATION = 'rps.asgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# The database will be reset on every deploy with this configuration.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -86,43 +93,30 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+# --- THIS IS THE FIX: Settings for production static files ---
+# This tells Django where to collect all static files to.
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# This makes serving static files in production more efficient.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-ASGI_APPLICATION = 'rps.asgi.application'
