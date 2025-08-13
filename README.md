@@ -3,11 +3,14 @@
 
 **RPS Ultra**🚀
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 **ABOUT THE PROJECT**
 
 RPS Ultra is a modern, web-based Rock, Paper, Scissors game where you challenge a smart AI using your webcam. This project leverages real-time computer vision to detect your hand gestures, creating an interactive and engaging gameplay experience. The application is built with a Python and Django backend and is fully configured for deployment on the web.
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 **FEATURES**✨
 
@@ -21,6 +24,7 @@ Dynamic User Interface: A fully themed, animated interface from the welcome scre
 
 Live on the Web: The project is configured for easy deployment on Render, allowing anyone to play.
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 **TECH STACK**🛠️
 
@@ -34,6 +38,7 @@ Server: Daphne
 
 Deployment: Render
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 **HOW TO PLAY** 🎮
 
@@ -48,3 +53,6 @@ On the game screen, wait for the countdown.
 Make your move (rock, paper, or scissors) when the counter says "SHOOT!"
 
 The first player to reach 5 points wins the match!
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
