@@ -18,7 +18,6 @@ STATISTICAL_SIGNIFICANCE_THRESHOLD = 1
 move_to_int = {'rock': 1, 'paper': 2, 'scissors': 3}
 int_to_move = {1: 'rock', 2: 'paper', 3: 'scissors'}
 beat_map = {1: 2, 2: 3, 3: 1}
-detector = HandDetector(maxHands=1, detectionCon=0.8)
 
 # --- HELPER FUNCTIONS ---
 def _decode_image_from_base64(image_data_string):
@@ -88,11 +87,15 @@ def annotate_only_frame(request):
 
     data = json.loads(request.body)
     img = _decode_image_from_base64(data.get('image', ''))
+    
+        if img is None:
+            return JsonResponse({'error': 'Invalid image data'}, status=400)
+    
+        # Resize image for faster processing
+        img = cv2.resize(img, (320, 240))
 
-    if img is None:
-        return JsonResponse({'error': 'Invalid image data'}, status=400)
-
-    # Use draw=True to get the annotated image back from the detector.
+    # Instantiate detector inside the function to avoid MediaPipe timestamp errors.
+    detector = HandDetector(maxHands=1, detectionCon=0.8)
     _, img_with_annotations = detector.findHands(img, draw=True)
 
     # Encode the annotated image back to Base64 to send to the frontend.
@@ -113,19 +116,26 @@ def analyze_frame(request):
 
     data = json.loads(request.body)
     img = _decode_image_from_base64(data.get('image', ''))
-
-    if img is None:
-        return JsonResponse({'error': 'Invalid image data'}, status=400)
-
-    # Final detection and annotation for the result screen
-    hands, img_with_annotations = detector.findHands(img, draw=True)
     
+        if img is None:
+            return JsonResponse({'error': 'Invalid image data'}, status=400)
+    
+        # Resize image for faster processing
+        img = cv2.resize(img, (320, 240))
+
+    # Instantiate detector inside the function to avoid MediaPipe timestamp errors.
+    detector = HandDetector(maxHands=1, detectionCon=0.8)
+    hands, img_with_annotations = detector.findHands(img, draw=True)
+
     player_move_str = None
     if hands:
         fingers = detector.fingersUp(hands[0])
-        if fingers == [0, 0, 0, 0, 0]: player_move_str = "rock"
-        elif fingers == [1, 1, 1, 1, 1]: player_move_str = "paper"
-        elif fingers == [0, 1, 1, 0, 0]: player_move_str = "scissors"
+        if fingers == [0, 0, 0, 0, 0]:
+            player_move_str = "rock"
+        elif fingers == [1, 1, 1, 1, 1]:
+            player_move_str = "paper"
+        elif fingers == [0, 1, 1, 0, 0]:
+            player_move_str = "scissors"
 
     if not player_move_str:
         return JsonResponse({'error': 'No hand detected or invalid gesture.'})
